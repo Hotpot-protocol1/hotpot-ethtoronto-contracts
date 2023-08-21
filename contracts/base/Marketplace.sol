@@ -99,6 +99,7 @@ contract Marketplace is ReentrancyGuard, Ownable {
                 msg.sender,
                 item.seller,
                 0,
+                0,
                 0
             );
         }

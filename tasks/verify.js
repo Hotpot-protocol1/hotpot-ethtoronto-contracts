@@ -12,13 +12,20 @@ task("verify-contract", "Verifies contract")
     const wrappedNativeToken =
       networks[network.name].AXELAR_WRAPPED_NATIVE_TOKEN;
     const symbol = networks[network.name].WRAPPED_TOKEN_SYMBOL;
+    const hotpotDeployment = "0x30b5db47421Fc8Db08d1d2a5CD2fC1437378f66b";
     console.log(`Verifying contract to ${taskArgs.contract}`);
 
     try {
       console.log("\nVerifying contract...");
       await run("verify:verify", {
         address: taskArgs.contract,
-        constructorArguments: [gateway, gasService, wrappedNativeToken, symbol],
+        constructorArguments: [
+          gasService,
+          gateway,
+          hotpotDeployment,
+          symbol,
+          wrappedNativeToken,
+        ],
       });
       console.log("Contract verified");
     } catch (error) {

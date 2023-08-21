@@ -54,7 +54,8 @@ interface IHotpot {
         address _buyer,
         address _seller,
         uint256 _buyerPendingAmount,
-        uint256 _sellerPendingAmount
+        uint256 _sellerPendingAmount,
+        uint256 crossChainAmount
     ) external payable;
 
     function executeRaffle(

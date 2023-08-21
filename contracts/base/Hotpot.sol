@@ -107,11 +107,16 @@ contract Hotpot is
         address _buyer,
         address _seller,
         uint256 _buyerPendingAmount,
-        uint256 _sellerPendingAmount
+        uint256 _sellerPendingAmount,
+        uint256 crossChainAmount
     ) public payable onlyMarketplaceOrGateway whenNotPaused {
         require(_buyer != _seller, "Buyer and seller must be different");
-        require(msg.value > 0, "No trade fee transferred (msg.value)");
-        uint256 potValueDelta = (msg.value * (MULTIPLIER - fee)) / MULTIPLIER;
+        require(
+            crossChainAmount > 0 || msg.value > 0,
+            "No trade fee transferred (msg.value)"
+        );
+        uint256 potValueDelta = ((msg.value + crossChainAmount) *
+            (MULTIPLIER - fee)) / MULTIPLIER;
         uint256 _currentPotSize = currentPotSize;
         uint256 _potLimit = potLimit;
         uint256 _raffleTicketCost = raffleTicketCost;
@@ -364,7 +369,7 @@ contract Hotpot is
             payload,
             (uint256, address, address)
         );
-        executeTrade(_totalFee, _buyer, _seller, 0, 0);
+        executeTrade(_totalFee, _buyer, _seller, 0, 0, tokenAmount);
     }
 
     function _generateRandomFromSalt(
