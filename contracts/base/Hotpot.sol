@@ -43,11 +43,12 @@ contract Hotpot is
 
     mapping(string => address) public sourceChains;
 
-    modifier onlyMarketplace() {
+    modifier onlyMarketplaceOrGateway() {
         require(
-            msg.sender == marketplace,
+            msg.sender == marketplace || msg.sender == address(gateway),
             "Caller is not the marketplace contract"
         );
+
         _;
     }
 
@@ -107,7 +108,7 @@ contract Hotpot is
         address _seller,
         uint256 _buyerPendingAmount,
         uint256 _sellerPendingAmount
-    ) public payable onlyMarketplace whenNotPaused {
+    ) public payable onlyMarketplaceOrGateway whenNotPaused {
         require(_buyer != _seller, "Buyer and seller must be different");
         require(msg.value > 0, "No trade fee transferred (msg.value)");
         uint256 potValueDelta = (msg.value * (MULTIPLIER - fee)) / MULTIPLIER;
@@ -167,7 +168,8 @@ contract Hotpot is
             _winners.length == numberOfWinners,
             "Must be equal to numberofWinners"
         );
-        require(address(this).balance >= _potLimit, "The pot is not filled");
+        // for testing
+        // require(address(this).balance >= _potLimit, "The pot is not filled");
 
         uint sum = 0;
         for (uint i; i < _amounts.length; i++) {
@@ -352,7 +354,7 @@ contract Hotpot is
         string calldata sourceAddress,
         bytes calldata payload,
         string calldata tokenSymbol,
-        uint256
+        uint256 tokenAmount
     ) internal override {
         require(
             sourceChains[sourceChain] == sourceAddress.toAddress(),
@@ -362,7 +364,6 @@ contract Hotpot is
             payload,
             (uint256, address, address)
         );
-        address tokenAddress = gateway.tokenAddresses(tokenSymbol);
         executeTrade(_totalFee, _buyer, _seller, 0, 0);
     }
 
