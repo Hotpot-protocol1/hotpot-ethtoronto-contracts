@@ -7,11 +7,15 @@ import {IAxelarGateway} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/
 import {AxelarExecutable} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
 import {StringToAddress, AddressToString} from "@axelar-network/axelar-gmp-sdk-solidity/contracts/utils/AddressString.sol";
 
+import {SchemaResolver} from "@ethereum-attestation-service/eas-contracts/contracts/resolver/SchemaResolver.sol";
+import {IEAS, Attestation, AttestationRequest, AttestationRequestData} from "@ethereum-attestation-service/eas-contracts/contracts/EAS.sol";
+
 contract Hotpot is
     IHotpot,
     OwnableUpgradeable,
     PausableUpgradeable,
-    AxelarExecutable
+    AxelarExecutable,
+    SchemaResolver
 {
     using StringToAddress for string;
     using AddressToString for address;
@@ -34,6 +38,8 @@ contract Hotpot is
     address private marketplace;
     address private operator;
     uint256 constant MULTIPLIER = 10000;
+    bytes32 public immutable i_schemaId;
+    IEAS public immutable i_eas;
 
     mapping(string => address) public sourceChains;
 
@@ -50,7 +56,13 @@ contract Hotpot is
         _;
     }
 
-    constructor(address _gateway) AxelarExecutable(_gateway) {
+    constructor(
+        address _gateway,
+        IEAS eas,
+        bytes32 _schemaId
+    ) AxelarExecutable(_gateway) SchemaResolver(eas) {
+        i_eas = eas;
+        i_schemaId = _schemaId;
         _disableInitializers();
     }
 
@@ -66,10 +78,10 @@ contract Hotpot is
         sourceChains[_sourceChain] = _sourceChainAddress;
     }
 
-    function initialize(address _owner, InitializeParams calldata params)
-        external
-        initializer
-    {
+    function initialize(
+        address _owner,
+        InitializeParams calldata params
+    ) external initializer {
         __Ownable_init();
         __Pausable_init();
         transferOwnership(_owner);
@@ -169,7 +181,7 @@ contract Hotpot is
         emit WinnersAssigned(_winners, _amounts);
     }
 
-    function claim() external whenNotPaused {
+    function claim() external payable whenNotPaused {
         address payable user = payable(msg.sender);
         Prize memory prize = claimablePrizes[user];
         require(prize.amount > 0, "No available winnings");
@@ -177,14 +189,25 @@ contract Hotpot is
 
         claimablePrizes[user].amount = 0;
         user.transfer(prize.amount);
-        emit Claim(user, prize.amount);
+        AttestationRequestData memory requestData = AttestationRequestData(
+            address(this),
+            type(uint64).max,
+            false,
+            bytes32(0),
+            abi.encode(address(this), user, prize.amount, block.timestamp),
+            msg.value
+        );
+        AttestationRequest memory request = AttestationRequest(
+            i_schemaId,
+            requestData
+        );
+        bytes32 attestationUID = i_eas.attest(request);
+        emit Claim(user, prize.amount, attestationUID);
     }
 
-    function getWinningTicketIds(uint16 _potId)
-        external
-        view
-        returns (uint32[] memory)
-    {
+    function getWinningTicketIds(
+        uint16 _potId
+    ) external view returns (uint32[] memory) {
         return winningTicketIds[_potId];
     }
 
@@ -200,10 +223,9 @@ contract Hotpot is
         emit OperatorUpdated(_newOperator);
     }
 
-    function setRaffleTicketCost(uint256 _newRaffleTicketCost)
-        external
-        onlyOwner
-    {
+    function setRaffleTicketCost(
+        uint256 _newRaffleTicketCost
+    ) external onlyOwner {
         require(
             raffleTicketCost != _newRaffleTicketCost,
             "Cost must be different"
@@ -258,11 +280,9 @@ contract Hotpot is
         );
     }
 
-    function _calculateTicketIdEnd(uint32 _lastRaffleTicketIdBefore)
-        internal
-        view
-        returns (uint32 _ticketIdEnd)
-    {
+    function _calculateTicketIdEnd(
+        uint32 _lastRaffleTicketIdBefore
+    ) internal view returns (uint32 _ticketIdEnd) {
         uint256 _raffleTicketCost = raffleTicketCost;
         uint256 _ethDeltaNeededToFillPot = ((potLimit - currentPotSize) *
             MULTIPLIER) / (MULTIPLIER - fee);
@@ -286,10 +306,10 @@ contract Hotpot is
         emit RandomWordRequested(requestId, potTicketIdStart, potTicketIdEnd);
     }
 
-    function fulfillRandomWords(uint256 _requestId, uint256 _salt)
-        external
-        onlyOperator
-    {
+    function fulfillRandomWords(
+        uint256 _requestId,
+        uint256 _salt
+    ) external onlyOperator {
         uint32 rangeFrom = potTicketIdStart;
         uint32 rangeTo = potTicketIdEnd;
 
@@ -346,11 +366,9 @@ contract Hotpot is
         executeTrade(_totalFee, _buyer, _seller, 0, 0);
     }
 
-    function _generateRandomFromSalt(uint256 _salt)
-        internal
-        view
-        returns (uint256 _random)
-    {
+    function _generateRandomFromSalt(
+        uint256 _salt
+    ) internal view returns (uint256 _random) {
         return uint256(keccak256(abi.encode(_salt, block.timestamp)));
     }
 
@@ -379,5 +397,19 @@ contract Hotpot is
                 }
             }
         }
+    }
+
+    function onAttest(
+        Attestation calldata attestation,
+        uint256 /*value*/
+    ) internal pure override returns (bool) {
+        return true;
+    }
+
+    function onRevoke(
+        Attestation calldata /*attestation*/,
+        uint256 /*value*/
+    ) internal pure override returns (bool) {
+        return true;
     }
 }

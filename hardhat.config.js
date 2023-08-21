@@ -68,8 +68,19 @@ module.exports = {
       goerli: networks.goerli.verifyApiKey,
       polygonMumbai: networks.polygonMumbai.verifyApiKey,
       optimisticGoerli: networks.optimisticGoerli.verifyApiKey,
-      optimisticEthereum: networks.optimisticEthereum.verifyApiKey,
+      avalancheFujiTestnet: networks.avalancheFujiTestnet.verifyApiKey,
+      baseGoerliTestnet: networks.baseGoerliTestnet.verifyApiKey,
     },
+    customChains: [
+      {
+        network: "baseGoerliTestnet",
+        chainId: networks.baseGoerliTestnet.chainId,
+        urls: {
+          apiURL: "https://api-goerli.basescan.org/api",
+          browserURL: "https://goerli.basescan.org/",
+        },
+      },
+    ],
   },
   gasReporter: {
     enabled: REPORT_GAS,

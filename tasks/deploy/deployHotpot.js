@@ -1,30 +1,38 @@
 const { networks } = require("../../networks");
 
-task("deploy-zora", "Deploys Zora contract ").setAction(
+task("deploy-hotpot", "Deploys Hotpot Implementation contract").setAction(
   async (taskArgs, hre) => {
-    console.log(`Deploying Zora contract to ${network.name}`);
+    console.log(`Deploying Hotpot contract to ${network.name}`);
 
     if (network.name === "hardhat") {
       throw Error(
         'This command cannot be used on a local development chain.  Specify a valid network or simulate an Functions request locally with "npx hardhat functions-simulate".'
       );
     }
-    const zora = await ethers.getContractFactory("Zora");
-    const zoraFactoryAddress = networks[network.name].ZORA_NFT_CREATOR_PROXY;
-    console.log(`Zora factory address: ${zoraFactoryAddress}`);
-    const zoraContract = await zora.deploy(zoraFactoryAddress);
+    const hotpot = await ethers.getContractFactory("Hotpot");
+    const gateway = networks[network.name].AXELAR_GATEWAY;
+    const eas = networks[network.name].EAS;
+    const schemaId =
+      "0x2c5ca635f20506a5963e5cb00b3b77f99f40b42bee9a705a0b68d57346030405";
+    const hotpotContract = await hotpot.deploy(gateway, eas, schemaId, {
+      gasPrice: 50000,
+    });
+
     console.log(
-      `\nWaiting 3 blocks for transaction ${zoraContract.deployTransaction.hash} to be confirmed...`
+      `\nWaiting 3 blocks for transaction ${hotpotContract.deployTransaction.hash} to be confirmed...`
     );
 
-    await zoraContract.deployTransaction.wait(
+    await hotpotContract.deployTransaction.wait(
       networks[network.name].WAIT_BLOCK_CONFIRMATIONS
+    );
+    console.log(
+      `Hotpot deployed to ${hotpotContract.address} on ${network.name}`
     );
     console.log("\nVerifying contract...");
     try {
       await run("verify:verify", {
-        address: zoraContract.address,
-        constructorArguments: [zoraFactoryAddress],
+        address: hotpotContract.address,
+        constructorArguments: [gateway, eas, schemaId],
       });
       console.log("Contract verified");
     } catch (error) {
@@ -37,8 +45,5 @@ task("deploy-zora", "Deploys Zora contract ").setAction(
         console.log("Contract already verified");
       }
     }
-    console.log(
-      `Zora contract deployed to ${zoraContract.address} on ${network.name}`
-    );
   }
 );

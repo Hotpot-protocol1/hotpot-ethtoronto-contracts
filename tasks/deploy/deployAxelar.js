@@ -1,23 +1,44 @@
-const { networks } = require("../networks");
-task("verify-contract", "Verifies contract")
-  .addParam("contract", "Address of the client contract to verify")
-  .setAction(async (taskArgs, hre) => {
+const { networks } = require("../../networks");
+
+task("deploy-axelar", "Deploys Axelar contract").setAction(
+  async (taskArgs, hre) => {
+    console.log(`Deploying Axelar contract to ${network.name}`);
+
     if (network.name === "hardhat") {
       throw Error(
         'This command cannot be used on a local development chain.  Specify a valid network or simulate an Functions request locally with "npx hardhat functions-simulate".'
       );
     }
+    const axelar = await ethers.getContractFactory("Axelar");
     const gateway = networks[network.name].AXELAR_GATEWAY;
     const gasService = networks[network.name].AXELAR_GAS_SERVICE;
     const wrappedNativeToken =
       networks[network.name].AXELAR_WRAPPED_NATIVE_TOKEN;
     const symbol = networks[network.name].WRAPPED_TOKEN_SYMBOL;
-    console.log(`Verifying contract to ${taskArgs.contract}`);
+    const axelarContract = await axelar.deploy(
+      gateway,
+      gasService,
+      wrappedNativeToken,
+      symbol,
+      {
+        gasPrice: 50000,
+      }
+    );
 
+    console.log(
+      `\nWaiting 3 blocks for transaction ${axelarContract.deployTransaction.hash} to be confirmed...`
+    );
+
+    await axelarContract.deployTransaction.wait(
+      networks[network.name].WAIT_BLOCK_CONFIRMATIONS
+    );
+    console.log(
+      `Axelar deployed to ${axelarContract.address} on ${network.name}`
+    );
+    console.log("\nVerifying contract...");
     try {
-      console.log("\nVerifying contract...");
       await run("verify:verify", {
-        address: taskArgs.contract,
+        address: axelarContract.address,
         constructorArguments: [gateway, gasService, wrappedNativeToken, symbol],
       });
       console.log("Contract verified");
@@ -31,4 +52,5 @@ task("verify-contract", "Verifies contract")
         console.log("Contract already verified");
       }
     }
-  });
+  }
+);
