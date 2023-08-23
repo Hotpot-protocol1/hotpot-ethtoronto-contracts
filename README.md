@@ -43,6 +43,14 @@ The Axelar testnet explorer UI is cluttered and a bit hard to read.
 
 </br>
 
+<br> **GH Repos** </br> 
+- https://github.com/Hotpot-protocol1/base-hotpot
+- https://github.com/Hotpot-protocol1/avax-hotpot
+- https://github.com/Hotpot-protocol1/xdc-hotpot
+- https://github.com/Hotpot-protocol1/goerli-hotpot
+- https://github.com/Hotpot-protocol1/zksync-hotpot
+- https://github.com/Hotpot-protocol1/hotpot-ethtoronto-contracts 
+</br>
 <br> **Deployments**</br>
 <br>
 *Base*
