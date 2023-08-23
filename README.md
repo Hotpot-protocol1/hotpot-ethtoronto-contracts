@@ -1,3 +1,54 @@
+# Marketplace Deployment Guide
+
+This guide explains how to clone and deploy the Marketplace project.
+
+## Prerequisites
+
+Before you begin, make sure you have the following tools installed:
+
+- Git
+- Node.js and npm
+
+## Clone the Repository
+
+1. Open your terminal.
+
+2. Change the current working directory to where you want to clone the project.
+
+3. Run the following command to clone the repository:
+
+   ```bash
+   git clone https://github.com/your-username/your-marketplace-repo.git
+   ```
+
+## Install Dependencies
+
+1. Change your working directory to the cloned project's directory:
+
+   ```bash
+   cd your-marketplace-repo
+   ```
+
+2. Install project dependencies using npm:
+
+   ```bash
+   npm install
+   ```
+
+## Start the Application
+
+1. After installing dependencies, you can start the application:
+
+   ```bash
+   npm start
+   ```
+
+The application will start, and you can access it in your web browser at [http://localhost:3000](http://localhost:3000).
+
+## Additional Configuration
+
+You may need to configure environment variables or other settings based on your deployment environment. Refer to the project's documentation for more details.
+
 <br>**Background**</br>
 Hotpot brings a new dimension of engagement for web3 dapps. It transforms any transaction producing activity into a lottery game. With every trade, transaction, swap, users are awarded with a raffle ticket. A % of the transaction fee is sent to the raffle pot. When the pot is full, random winners will be chosen on-chain and can claim the ultimate reward. It also allows any one create their own lottery game on any DApp. 
 </br>
