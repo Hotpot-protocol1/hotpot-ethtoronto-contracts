@@ -49,7 +49,8 @@ The application will start, and you can access it in your web browser at [http:/
 
 You may need to configure environment variables or other settings based on your deployment environment. Refer to the project's documentation for more details.
 
-# Description 
+## Project Description
+
 <br>**Background**</br>
 Hotpot brings a new dimension of engagement for web3 dapps. It transforms any transaction producing activity into a lottery game. With every trade, transaction, swap, users are awarded with a raffle ticket. A % of the transaction fee is sent to the raffle pot. When the pot is full, random winners will be chosen on-chain and can claim the ultimate reward. It also allows any one create their own lottery game on any DApp. 
 </br>
